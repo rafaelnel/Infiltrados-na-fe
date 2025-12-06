@@ -1,0 +1,1455 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infiltrados na Fé</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .player-card {
+            transition: all 0.3s ease;
+        }
+        
+        .player-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .role-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .dead-player {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+        
+        .hidden-role {
+            filter: blur(20px);
+            user-select: none;
+        }
+        
+        .reveal-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .role-selector {
+            transition: all 0.2s ease;
+        }
+        
+        .role-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="w-full h-full m-0 p-0">
+  <div id="app" class="w-full h-full" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);"><!-- Tela de Gerenciar Usuários -->
+   <div id="user-management-screen" class="w-full h-full flex items-center justify-center p-8 overflow-y-auto">
+    <div class="w-full max-w-4xl my-8"><!-- Header com Título e Descrição -->
+     <div class="bg-white rounded-lg shadow-2xl p-8 mb-6 fade-in text-center">
+      <div class="mb-4"><span class="text-6xl">🎭</span>
+      </div>
+      <h1 id="game-title" class="text-5xl font-bold mb-3 text-indigo-900">Infiltrados na Fé</h1>
+      <p id="welcome-message" class="text-xl text-gray-600 mb-4">Bem-vindo ao jogo!</p>
+      <p class="text-gray-500 max-w-2xl mx-auto">Um jogo de dedução social onde Ovelhas e Soldados se enfrentam. Adicione os jogadores abaixo para começar uma nova partida!</p>
+     </div><!-- Painel de Criação e Lista -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Criar Novo Usuário -->
+      <div class="bg-white rounded-lg shadow-2xl p-6 fade-in">
+       <div class="flex items-center justify-center mb-4">
+        <div class="bg-green-100 p-3 rounded-full"><span class="text-3xl">➕</span>
+        </div>
+       </div>
+       <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Adicionar Jogador</h3>
+       <p class="text-sm text-gray-600 text-center mb-4">Digite o nome de cada jogador que participará da partida</p>
+       <div class="space-y-3"><input type="text" id="new-user-input" placeholder="Ex: João, Maria, Pedro..." class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-center text-lg"> <button id="add-user-btn" class="w-full px-6 py-3 rounded-lg font-semibold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"> ✓ Adicionar Jogador </button>
+       </div>
+       <div class="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+        <p class="text-sm text-blue-800 text-center"><strong>Mínimo:</strong> 4 jogadores<br><strong>Recomendado:</strong> 6-12 jogadores</p>
+       </div>
+      </div><!-- Lista de Usuários -->
+      <div class="bg-white rounded-lg shadow-2xl p-6 fade-in">
+       <div class="flex items-center justify-center mb-4">
+        <div class="bg-indigo-100 p-3 rounded-full"><span class="text-3xl">👥</span>
+        </div>
+       </div>
+       <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Jogadores</h3>
+       <div class="mb-4 p-3 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+        <p class="text-indigo-800 text-center font-semibold">Total: <span id="total-users-count">0</span> jogador(es)</p>
+       </div>
+       <div id="available-users-list" class="space-y-2 max-h-80 overflow-y-auto">
+        <div class="text-center py-12"><span class="text-6xl mb-3 block opacity-30">🎮</span>
+         <p class="text-gray-400">Nenhum jogador adicionado</p>
+         <p class="text-gray-400 text-sm mt-1">Adicione pelo menos 4 jogadores</p>
+        </div>
+       </div>
+      </div>
+     </div><!-- Botão de Continuar -->
+     <div class="mt-6 bg-white rounded-lg shadow-2xl p-6 fade-in"><button id="next-to-selection-btn" class="w-full py-4 px-6 rounded-lg font-bold text-xl text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"> Iniciar Configuração do Jogo → </button>
+      <p class="text-center text-gray-500 text-sm mt-3">Você poderá selecionar quem joga e as funções na próxima etapa</p>
+     </div>
+    </div>
+   </div><!-- Tela de Seleção de Jogadores -->
+   <div id="player-selection-screen" class="w-full h-full flex items-center justify-center p-8 overflow-y-auto hidden">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-2xl p-8 fade-in my-8">
+     <h2 class="text-3xl font-bold text-center mb-2 text-indigo-900">Selecione os Jogadores</h2>
+     <p class="text-center text-gray-600 mb-6">Escolha quem vai participar desta partida</p>
+     <div class="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+      <p class="text-blue-800 text-center"><strong>Jogadores selecionados:</strong> <span id="selected-players-count">0</span></p>
+     </div>
+     <div class="mb-6">
+      <div id="player-selection-list" class="space-y-2 max-h-96 overflow-y-auto"><!-- Lista de usuários para selecionar aparecerá aqui -->
+      </div>
+     </div>
+     <div id="selection-error" class="hidden mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+      <p class="text-red-800 text-center font-semibold"></p>
+     </div><button id="next-to-roles-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"> Próximo: Selecionar Funções → </button>
+    </div>
+   </div><!-- Tela de Seleção de Funções -->
+   <div id="role-selection-screen" class="w-full h-full p-8 overflow-y-auto hidden">
+    <div class="w-full max-w-4xl mx-auto py-8">
+     <div class="bg-white rounded-lg shadow-2xl p-8 fade-in mb-8">
+      <h2 class="text-3xl font-bold text-center mb-2 text-indigo-900">Selecione as Funções</h2>
+      <p class="text-center text-gray-600 mb-6">Escolha quantos de cada função terão no jogo</p>
+      <div class="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+       <p class="text-blue-800 text-center"><strong>Total de jogadores:</strong> <span id="total-players-display">4</span> | <strong>Funções selecionadas:</strong> <span id="selected-roles-count">0</span></p>
+      </div>
+      <div id="role-selection-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><!-- Seletores de função aparecerão aqui -->
+      </div>
+      <div id="role-error" class="hidden mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+       <p class="text-red-800 text-center font-semibold"></p>
+      </div><button id="start-game-with-roles-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"> Iniciar Jogo </button>
+     </div>
+    </div>
+   </div><!-- Tela de Revelação de Papéis -->
+   <div id="role-reveal-screen" class="w-full h-full flex items-center justify-center p-8 hidden">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-2xl p-8 fade-in">
+     <h2 class="text-3xl font-bold text-center mb-6 text-indigo-900">Distribuição de Papéis</h2>
+     <p class="text-center text-gray-600 mb-8">Cada jogador deve ver sua função secretamente</p>
+     <div class="mb-6">
+      <p class="text-xl font-semibold text-center mb-4">Vez de: <span id="current-reveal-player" class="text-indigo-600">Jogador 1</span></p>
+      <div class="bg-gray-50 p-8 rounded-lg mb-4 text-center">
+       <div id="role-hidden" class="mb-4">
+        <p class="text-gray-500 mb-4">Clique no botão abaixo para revelar sua função</p>
+        <p class="text-6xl hidden-role">🎭</p>
+       </div>
+       <div id="role-revealed" class="hidden">
+        <div class="role-card rounded-lg p-6 text-white mb-4">
+         <p class="text-2xl font-bold mb-2" id="revealed-role-name">Aldeão</p>
+         <p class="text-sm opacity-90" id="revealed-role-description">Descrição da função</p>
+        </div>
+        <p class="text-sm text-gray-600">Memorize sua função e passe o dispositivo para o próximo jogador</p>
+       </div>
+      </div><button id="reveal-role-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg reveal-btn mb-3"> 👁️ Revelar Minha Função </button> <button id="next-player-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"> Próximo Jogador → </button> <button id="start-game-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg hidden" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"> Começar Jogo! </button>
+     </div>
+    </div>
+   </div><!-- Tela do Jogo - Noite -->
+   <div id="night-screen" class="w-full h-full flex items-center justify-center p-8 hidden" style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);">
+    <div class="w-full max-w-2xl bg-gray-900 rounded-lg shadow-2xl p-8 fade-in text-white">
+     <h2 id="night-phase-text" class="text-4xl font-bold text-center mb-4">🌙 A Noite Chegou...</h2>
+     <p class="text-center text-gray-300 mb-6">Cada jogador deve ver sua vez em segredo</p>
+     <div class="mb-6">
+      <div class="bg-yellow-900 border-2 border-yellow-600 rounded-lg p-4 mb-4">
+       <p class="text-yellow-200 text-center text-sm">⚠️ <strong>IMPORTANTE:</strong> Passe o dispositivo para cada jogador na ordem. Todos devem realizar sua ação (ou passar) para manter o sigilo!</p>
+      </div>
+      <p class="text-2xl font-semibold text-center mb-4">Vez de: <span id="current-night-player" class="text-yellow-400">Jogador 1</span></p>
+      <div id="night-reveal-section" class="bg-gray-800 p-6 rounded-lg mb-4">
+       <p class="text-center text-gray-400 mb-4">Clique para revelar suas instruções</p><button id="reveal-night-action-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg reveal-btn"> 👁️ Ver Minha Ação </button>
+      </div>
+      <div id="night-action-section" class="bg-gray-800 p-6 rounded-lg mb-4 hidden">
+       <p id="night-instruction" class="text-center text-lg mb-4">Suas instruções aparecerão aqui</p>
+       <div id="night-target-selection" class="space-y-2 mb-4"><!-- Botões de seleção de alvo aparecerão aqui -->
+       </div>
+       <div id="night-no-action" class="text-center hidden">
+        <p class="text-gray-400 mb-4">Você não tem ação especial esta noite. Clique em "Passar Vez" abaixo.</p>
+       </div><button id="confirm-night-action-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg opacity-50 cursor-not-allowed" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" disabled> ✓ Confirmar Escolha </button>
+      </div>
+     </div>
+    </div>
+   </div><!-- Tela do Jogo - Dia -->
+   <div id="day-screen" class="w-full h-full p-8 overflow-y-auto hidden">
+    <div class="w-full max-w-6xl mx-auto py-8"><!-- Cabeçalho do Jogo -->
+     <div class="bg-white rounded-lg shadow-2xl p-6 mb-6">
+      <h2 class="text-3xl font-bold text-indigo-900 mb-2">☀️ Dia <span id="day-number">1</span></h2>
+      <p id="day-phase-text" class="text-gray-600 mb-4">O dia amanheceu...</p>
+      <div id="victim-announcement" class="p-4 bg-red-50 border-2 border-red-300 rounded-lg hidden">
+       <p class="text-red-800 font-semibold text-center"></p>
+      </div>
+      <div id="conversion-announcement" class="p-4 bg-purple-50 border-2 border-purple-300 rounded-lg hidden mt-4">
+       <p class="text-purple-800 font-semibold text-center"></p>
+      </div>
+      <div id="game-end-announcement" class="p-4 bg-green-50 border-2 border-green-300 rounded-lg hidden">
+       <p class="text-green-800 font-semibold text-center"></p>
+      </div>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><!-- Painel Principal -->
+      <div class="lg:col-span-2 space-y-6"><!-- Discussão -->
+       <div class="bg-white rounded-lg shadow-2xl p-6">
+        <h3 class="text-2xl font-bold text-indigo-900 mb-4">💬 Fase de Discussão</h3>
+        <p class="text-gray-600 mb-4">Discutam entre vocês quem é suspeito e votem para eliminar alguém!</p>
+        <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+         <p class="text-yellow-800 text-sm"><strong>Dica:</strong> Os Soldados tentarão enganar vocês. Use a lógica e a dedução!</p>
+        </div>
+       </div><!-- Votação -->
+       <div class="bg-white rounded-lg shadow-2xl p-6">
+        <h3 class="text-2xl font-bold text-indigo-900 mb-4">🗳️ Votação Secreta</h3>
+        <p class="text-gray-600 mb-4">Cada jogador deve votar em segredo</p>
+        <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
+         <p class="text-yellow-800 text-sm">⚠️ <strong>IMPORTANTE:</strong> Passe o dispositivo para cada jogador vivo na ordem para votar secretamente!</p>
+        </div>
+        <div id="vote-turn-section">
+         <p class="text-xl font-semibold text-center mb-4">Vez de: <span id="current-vote-player" class="text-indigo-600">Jogador 1</span></p>
+         <div id="vote-reveal-section" class="bg-gray-50 p-4 rounded-lg mb-4">
+          <p class="text-center text-gray-600 mb-4">Clique para votar em segredo</p><button id="reveal-vote-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg reveal-btn"> 👁️ Ver Opções de Voto </button>
+         </div>
+         <div id="vote-action-section" class="hidden">
+          <p class="text-center text-gray-600 mb-4">Escolha quem eliminar:</p>
+          <div id="vote-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4"><!-- Botões de votação aparecerão aqui -->
+          </div><button id="confirm-vote-btn" class="w-full py-3 px-6 rounded-lg font-bold text-white transition-all shadow-lg" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" disabled> ✓ Confirmar Voto </button>
+         </div>
+        </div>
+        <div id="vote-complete-section" class="hidden">
+         <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">
+          <p class="text-green-800 text-center font-semibold">✓ Todos votaram!</p>
+          <p class="text-green-700 text-center text-sm">Clique abaixo para ver o resultado</p>
+         </div><button id="reveal-result-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg mb-4" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"> 📊 Revelar Resultado da Votação </button>
+        </div>
+        <div id="vote-result" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
+         <p class="text-center font-semibold text-gray-800"></p>
+        </div><button id="next-phase-btn" class="w-full mt-4 py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg hidden" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);"> Próxima Fase → </button>
+       </div>
+      </div><!-- Lista de Jogadores -->
+      <div class="space-y-6">
+       <div class="bg-white rounded-lg shadow-2xl p-6">
+        <h3 class="text-2xl font-bold text-indigo-900 mb-4">����� Jogadores</h3>
+        <div id="game-players-list" class="space-y-2"><!-- Jogadores serão listados aqui -->
+        </div>
+       </div><!-- Resumo do Jogo -->
+       <div class="bg-white rounded-lg shadow-2xl p-6">
+        <h3 class="text-2xl font-bold text-indigo-900 mb-4">📊 Resumo</h3>
+        <div class="space-y-2 text-sm">
+         <p><span class="font-semibold">Vivos:</span> <span id="alive-count">0</span></p>
+         <p><span class="font-semibold">Mortos:</span> <span id="dead-count">0</span></p>
+         <p><span class="font-semibold">Fase:</span> <span id="phase-info">Dia 1</span></p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Tela de Fim de Jogo -->
+   <div id="end-screen" class="w-full h-full flex items-center justify-center p-8 hidden overflow-y-auto">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-2xl p-8 fade-in my-8">
+     <h2 id="winner-title" class="text-4xl font-bold text-center mb-4 text-indigo-900">🎉 Fim de Jogo!</h2>
+     <p id="winner-message" class="text-xl text-center text-gray-700 mb-8">As Ovelhas venceram!</p>
+     <div class="mb-8">
+      <h3 class="text-2xl font-bold text-indigo-900 mb-4">🎭 Funções Reveladas</h3>
+      <div id="revealed-roles" class="space-y-2"><!-- Funções reveladas aparecerão aqui -->
+      </div>
+     </div><button id="new-game-btn" class="w-full py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"> Novo Jogo </button>
+    </div>
+   </div>
+  </div>
+  <script>
+        const defaultConfig = {
+            game_title: 'Infiltrados na Fé',
+            welcome_message: 'Bem-vindo ao jogo!',
+            night_phase_text: 'A Noite Chegou...',
+            day_phase_text: 'O dia amanheceu...',
+            background_color: '#1e3a8a',
+            surface_color: '#ffffff',
+            text_color: '#1e293b',
+            primary_action_color: '#667eea',
+            secondary_action_color: '#10b981'
+        };
+
+        let currentConfig = { ...defaultConfig };
+        let allUsers = [];
+        let players = [];
+        let selectedUserIds = new Set();
+        let currentPhase = 'setup';
+        let currentRevealIndex = 0;
+        let currentNightPlayerIndex = 0;
+        let currentVotePlayerIndex = 0;
+        let dayNumber = 1;
+        let nightActions = {};
+        let dayVotes = {};
+        let hasVoted = new Set();
+        let evangelistPrayers = {};
+        let currentVoterSelectedTarget = null;
+
+        const ROLES = {
+            aldeao: { 
+                name: 'Ovelha', 
+                team: 'aldeao', 
+                description: 'Você é uma ovelha. Descubra quem são os soldados durante o dia e vote para eliminá-los!',
+                nightAction: false,
+                emoji: '🐑'
+            },
+            lobisomem: { 
+                name: 'Soldado', 
+                team: 'lobisomem', 
+                description: 'Você é um soldado. Durante a noite, escolha uma vítima para eliminar. Durante o dia, esconda sua identidade!',
+                nightAction: true,
+                emoji: '🪖'
+            },
+            curandeiro: { 
+                name: 'Pastor', 
+                team: 'aldeao', 
+                description: 'Você pode proteger um jogador por noite da morte. Use sabiamente!',
+                nightAction: true,
+                emoji: '🧑‍🌾'
+            },
+            apostolo: { 
+                name: 'Apóstolo', 
+                team: 'aldeao', 
+                description: 'Você pode escolher DUAS pessoas por noite e descobrir se são da mesma equipe ou de equipes diferentes!',
+                nightAction: true,
+                emoji: '✝️',
+                selectTwo: true
+            },
+            profeta: { 
+                name: 'Profeta', 
+                team: 'aldeao', 
+                description: 'Você pode investigar um jogador por noite para descobrir exatamente qual é o papel dele!',
+                nightAction: true,
+                emoji: '🔮'
+            },
+            mestre: { 
+                name: 'Mestre', 
+                team: 'aldeao', 
+                description: 'Você é o Mestre. Seu voto vale DUPLO nas votações do dia! Use seu poder com sabedoria.',
+                nightAction: false,
+                emoji: '👑',
+                doubleVote: true
+            },
+            evangelista: { 
+                name: 'Evangelista', 
+                team: 'aldeao', 
+                description: 'Você pode orar por um jogador cada noite. Se orar DUAS vezes pelo mesmo Soldado, ele será convertido em Lobo (ovelha)!',
+                nightAction: true,
+                emoji: '🙏'
+            },
+            assassino: { 
+                name: 'Assassino', 
+                team: 'neutro', 
+                description: 'Você é neutro. Elimine um alvo específico para vencer. Você vence sozinho se eliminar seu alvo!',
+                nightAction: true,
+                emoji: '🗡️'
+            }
+        };
+
+        async function onConfigChange(config) {
+            currentConfig = { ...config };
+            
+            const gameTitle = document.getElementById('game-title');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const nightPhaseText = document.getElementById('night-phase-text');
+            const dayPhaseText = document.getElementById('day-phase-text');
+            
+            if (gameTitle) gameTitle.textContent = config.game_title || defaultConfig.game_title;
+            if (welcomeMessage) welcomeMessage.textContent = config.welcome_message || defaultConfig.welcome_message;
+            if (nightPhaseText) nightPhaseText.textContent = '🌙 ' + (config.night_phase_text || defaultConfig.night_phase_text);
+            if (dayPhaseText) dayPhaseText.textContent = config.day_phase_text || defaultConfig.day_phase_text;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [
+                    {
+                        get: () => config.background_color || defaultConfig.background_color,
+                        set: (value) => {
+                            config.background_color = value;
+                            window.elementSdk.setConfig({ background_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.surface_color || defaultConfig.surface_color,
+                        set: (value) => {
+                            config.surface_color = value;
+                            window.elementSdk.setConfig({ surface_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.text_color || defaultConfig.text_color,
+                        set: (value) => {
+                            config.text_color = value;
+                            window.elementSdk.setConfig({ text_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                        set: (value) => {
+                            config.primary_action_color = value;
+                            window.elementSdk.setConfig({ primary_action_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+                        set: (value) => {
+                            config.secondary_action_color = value;
+                            window.elementSdk.setConfig({ secondary_action_color: value });
+                        }
+                    }
+                ],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ['game_title', config.game_title || defaultConfig.game_title],
+                ['welcome_message', config.welcome_message || defaultConfig.welcome_message],
+                ['night_phase_text', config.night_phase_text || defaultConfig.night_phase_text],
+                ['day_phase_text', config.day_phase_text || defaultConfig.day_phase_text]
+            ]);
+        }
+
+        function showScreen(screenId) {
+            const screens = ['user-management-screen', 'player-selection-screen', 'role-selection-screen', 'role-reveal-screen', 'night-screen', 'day-screen', 'end-screen'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function addUser() {
+            const input = document.getElementById('new-user-input');
+            const name = input.value.trim();
+            
+            if (!name) {
+                return;
+            }
+            
+            if (allUsers.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'mt-2 p-2 bg-red-100 border border-red-300 rounded text-center text-sm text-red-800';
+                errorMsg.textContent = 'Este jogador já existe!';
+                input.parentElement.appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 2000);
+                return;
+            }
+            
+            const user = {
+                id: generateId(),
+                name: name
+            };
+            
+            allUsers.push(user);
+            input.value = '';
+            updateAvailableUsersList();
+        }
+
+        function updateAvailableUsersList() {
+            const container = document.getElementById('available-users-list');
+            document.getElementById('total-users-count').textContent = allUsers.length;
+            
+            if (allUsers.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <span class="text-6xl mb-3 block opacity-30">🎮</span>
+                        <p class="text-gray-400">Nenhum jogador adicionado</p>
+                        <p class="text-gray-400 text-sm mt-1">Adicione pelo menos 4 jogadores</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            allUsers.forEach(user => {
+                const card = document.createElement('div');
+                card.className = 'flex items-center justify-between p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg hover:shadow-md transition-all';
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">👤</span>
+                        <span class="font-semibold text-gray-800">${user.name}</span>
+                    </div>
+                    <button 
+                        class="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors"
+                        onclick="removeUser('${user.id}')"
+                    >
+                        ✕
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeUser(userId) {
+            allUsers = allUsers.filter(u => u.id !== userId);
+            updateAvailableUsersList();
+        }
+
+        function showPlayerSelection() {
+            if (allUsers.length < 4) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'mt-4 p-3 bg-red-100 border-2 border-red-300 rounded-lg text-center text-sm text-red-800 font-semibold';
+                errorMsg.textContent = '⚠️ Você precisa adicionar pelo menos 4 jogadores para continuar!';
+                document.querySelector('#user-management-screen .w-full.max-w-4xl').appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 3000);
+                return;
+            }
+            
+            selectedUserIds.clear();
+            updatePlayerSelectionList();
+            showScreen('player-selection-screen');
+        }
+
+        function updatePlayerSelectionList() {
+            const container = document.getElementById('player-selection-list');
+            container.innerHTML = '';
+            
+            allUsers.forEach(user => {
+                const isSelected = selectedUserIds.has(user.id);
+                const card = document.createElement('div');
+                card.className = `flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    isSelected 
+                        ? 'bg-indigo-100 border-indigo-500' 
+                        : 'bg-gray-50 border-gray-300 hover:border-indigo-300'
+                }`;
+                card.onclick = () => togglePlayerSelection(user.id);
+                
+                card.innerHTML = `
+                    <span class="font-semibold ${isSelected ? 'text-indigo-900' : 'text-gray-800'}">${user.name}</span>
+                    <span class="text-2xl">${isSelected ? '✓' : ''}</span>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.getElementById('selected-players-count').textContent = selectedUserIds.size;
+        }
+
+        function togglePlayerSelection(userId) {
+            if (selectedUserIds.has(userId)) {
+                selectedUserIds.delete(userId);
+            } else {
+                selectedUserIds.add(userId);
+            }
+            updatePlayerSelectionList();
+        }
+
+        function showRoleSelection() {
+            const selectionError = document.getElementById('selection-error');
+            
+            if (selectedUserIds.size < 4) {
+                selectionError.classList.remove('hidden');
+                selectionError.querySelector('p').textContent = 'Selecione pelo menos 4 jogadores!';
+                return;
+            }
+            
+            selectionError.classList.add('hidden');
+            
+            players = [];
+            selectedUserIds.forEach(userId => {
+                const user = allUsers.find(u => u.id === userId);
+                if (user) {
+                    players.push({
+                        id: generateId(),
+                        name: user.name,
+                        role: '',
+                        team: '',
+                        is_alive: true
+                    });
+                }
+            });
+            
+            document.getElementById('total-players-display').textContent = players.length;
+            createRoleSelectors();
+            showScreen('role-selection-screen');
+        }
+
+        function createRoleSelectors() {
+            const container = document.getElementById('role-selection-container');
+            container.innerHTML = '';
+            
+            const roleOrder = ['lobisomem', 'aldeao', 'curandeiro', 'evangelista', 'apostolo', 'profeta', 'mestre'];
+            
+            roleOrder.forEach(roleKey => {
+                const role = ROLES[roleKey];
+                const card = document.createElement('div');
+                card.className = 'role-selector bg-white border-2 border-gray-300 rounded-lg p-4';
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-3xl">${role.emoji}</span>
+                            <div>
+                                <h4 class="font-bold text-gray-800">${role.name}</h4>
+                                <p class="text-xs text-gray-500">${role.team === 'aldeao' ? 'Ovelhas' : role.team === 'lobisomem' ? 'Soldados' : 'Neutro'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">${role.description}</p>
+                    <div class="flex items-center justify-center space-x-3">
+                        <button class="decrease-btn w-10 h-10 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-colors" data-role="${roleKey}">-</button>
+                        <span class="role-count text-2xl font-bold text-gray-800 w-12 text-center" data-role="${roleKey}">0</span>
+                        <button class="increase-btn w-10 h-10 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors" data-role="${roleKey}">+</button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            document.querySelectorAll('.increase-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const roleKey = e.target.dataset.role;
+                    const countSpan = document.querySelector(`.role-count[data-role="${roleKey}"]`);
+                    const currentCount = parseInt(countSpan.textContent);
+                    const totalPlayers = players.length;
+                    
+                    let totalSelected = 0;
+                    document.querySelectorAll('.role-count').forEach(span => {
+                        totalSelected += parseInt(span.textContent);
+                    });
+                    
+                    if (totalSelected < totalPlayers) {
+                        countSpan.textContent = currentCount + 1;
+                        updateRoleCount();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.decrease-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const roleKey = e.target.dataset.role;
+                    const countSpan = document.querySelector(`.role-count[data-role="${roleKey}"]`);
+                    const currentCount = parseInt(countSpan.textContent);
+                    if (currentCount > 0) {
+                        countSpan.textContent = currentCount - 1;
+                        updateRoleCount();
+                    }
+                });
+            });
+        }
+
+        function updateRoleCount() {
+            let total = 0;
+            document.querySelectorAll('.role-count').forEach(span => {
+                total += parseInt(span.textContent);
+            });
+            document.getElementById('selected-roles-count').textContent = total;
+        }
+
+        function startGameWithSelectedRoles() {
+            const playerCount = players.length;
+            let roles = [];
+            
+            document.querySelectorAll('.role-count').forEach(span => {
+                const roleKey = span.dataset.role;
+                const count = parseInt(span.textContent);
+                for (let i = 0; i < count; i++) {
+                    roles.push(roleKey);
+                }
+            });
+            
+            const errorDiv = document.getElementById('role-error');
+            
+            if (roles.length !== playerCount) {
+                errorDiv.classList.remove('hidden');
+                errorDiv.querySelector('p').textContent = `Erro: Você selecionou ${roles.length} funções, mas há ${playerCount} jogadores!`;
+                return;
+            }
+            
+            if (roles.length === 0) {
+                errorDiv.classList.remove('hidden');
+                errorDiv.querySelector('p').textContent = 'Erro: Você precisa selecionar pelo menos uma função!';
+                return;
+            }
+            
+            errorDiv.classList.add('hidden');
+            
+            roles = roles.sort(() => Math.random() - 0.5);
+            
+            players.forEach((player, index) => {
+                player.role = roles[index];
+                player.team = ROLES[roles[index]].team;
+                player.originalRole = roles[index];
+            });
+            
+            startRoleReveal();
+        }
+
+        function startRoleReveal() {
+            currentRevealIndex = 0;
+            showScreen('role-reveal-screen');
+            updateRoleReveal();
+        }
+
+        function updateRoleReveal() {
+            document.getElementById('current-reveal-player').textContent = players[currentRevealIndex].name;
+            document.getElementById('role-hidden').classList.remove('hidden');
+            document.getElementById('role-revealed').classList.add('hidden');
+            document.getElementById('reveal-role-btn').classList.remove('hidden');
+            document.getElementById('next-player-btn').classList.add('hidden');
+            document.getElementById('start-game-btn').classList.add('hidden');
+        }
+
+        function revealRole() {
+            const player = players[currentRevealIndex];
+            const role = ROLES[player.role];
+            
+            document.getElementById('revealed-role-name').textContent = role.emoji + ' ' + role.name;
+            document.getElementById('revealed-role-description').textContent = role.description;
+            
+            document.getElementById('role-hidden').classList.add('hidden');
+            document.getElementById('role-revealed').classList.remove('hidden');
+            document.getElementById('reveal-role-btn').classList.add('hidden');
+            
+            if (currentRevealIndex < players.length - 1) {
+                document.getElementById('next-player-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('start-game-btn').classList.remove('hidden');
+            }
+        }
+
+        function nextPlayer() {
+            currentRevealIndex++;
+            if (currentRevealIndex < players.length) {
+                updateRoleReveal();
+            }
+        }
+
+        function startNightPhase() {
+            nightActions = {};
+            currentNightPlayerIndex = 0;
+            showScreen('night-screen');
+            processNightTurn();
+        }
+
+        function processNightTurn() {
+            const alivePlayers = players.filter(p => p.is_alive);
+            
+            if (currentNightPlayerIndex >= alivePlayers.length) {
+                resolveNight();
+                return;
+            }
+            
+            const currentPlayer = alivePlayers[currentNightPlayerIndex];
+            document.getElementById('current-night-player').textContent = currentPlayer.name;
+            
+            const actionSection = document.getElementById('night-action-section');
+            const resultDivs = actionSection.querySelectorAll('.bg-purple-900.border-2.border-purple-500, .bg-purple-900.border-purple-500');
+            resultDivs.forEach(div => div.remove());
+            
+            const endTurnBtns = actionSection.querySelectorAll('button[style*="f59e0b"]');
+            endTurnBtns.forEach(btn => btn.remove());
+            
+            const prayerInfos = actionSection.querySelectorAll('.bg-purple-900.border-purple-500');
+            prayerInfos.forEach(info => info.remove());
+            
+            const confirmBtn = document.getElementById('confirm-night-action-btn');
+            confirmBtn.classList.remove('hidden');
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            document.getElementById('night-reveal-section').classList.remove('hidden');
+            actionSection.classList.add('hidden');
+        }
+
+        function revealNightAction() {
+            const alivePlayers = players.filter(p => p.is_alive);
+            const currentPlayer = alivePlayers[currentNightPlayerIndex];
+            const role = ROLES[currentPlayer.role];
+            
+            document.getElementById('night-reveal-section').classList.add('hidden');
+            document.getElementById('night-action-section').classList.remove('hidden');
+            
+            let instruction = '';
+            let hasAction = role.nightAction;
+            
+            if (currentPlayer.role === 'lobisomem') {
+                instruction = 'Você é um Soldado! Escolha uma vítima para eliminar esta noite.';
+            } else if (currentPlayer.role === 'curandeiro') {
+                instruction = 'Você é o Pastor! Escolha alguém para proteger da morte esta noite.';
+            } else if (currentPlayer.role === 'apostolo') {
+                instruction = 'Você é o Apóstolo! Escolha DUAS pessoas para descobrir se são da mesma equipe ou equipes diferentes.';
+            } else if (currentPlayer.role === 'profeta') {
+                instruction = 'Você é o Profeta! Escolha alguém para descobrir exatamente qual é o papel dele.';
+            } else if (currentPlayer.role === 'evangelista') {
+                instruction = 'Você é o Evangelista! Ore por um jogador. Se orar DUAS vezes pelo mesmo Soldado, ele será convertido!';
+                
+                if (!evangelistPrayers[currentPlayer.id]) {
+                    evangelistPrayers[currentPlayer.id] = {};
+                }
+                
+                const prayerInfo = document.createElement('div');
+                prayerInfo.className = 'mb-3 p-3 bg-purple-900 border border-purple-500 rounded-lg';
+                prayerInfo.innerHTML = '<p class="text-purple-200 text-sm font-semibold mb-2">🙏 Suas Orações Anteriores:</p>';
+                
+                const prayers = evangelistPrayers[currentPlayer.id];
+                if (Object.keys(prayers).length === 0) {
+                    prayerInfo.innerHTML += '<p class="text-purple-300 text-xs">Você ainda não orou por ninguém.</p>';
+                } else {
+                    Object.keys(prayers).forEach(targetId => {
+                        const target = players.find(p => p.id === targetId);
+                        if (target && target.is_alive) {
+                            prayerInfo.innerHTML += `<p class="text-purple-300 text-xs">• ${target.name}: ${prayers[targetId]} oração(ões)</p>`;
+                        }
+                    });
+                }
+                
+                document.getElementById('night-instruction').after(prayerInfo);
+            } else {
+                instruction = 'Você não tem ação especial esta noite.';
+                hasAction = false;
+            }
+            
+            document.getElementById('night-instruction').textContent = instruction;
+            
+            const targetSelection = document.getElementById('night-target-selection');
+            const noAction = document.getElementById('night-no-action');
+            
+            if (hasAction) {
+                targetSelection.classList.remove('hidden');
+                noAction.classList.add('hidden');
+                
+                targetSelection.innerHTML = '';
+                
+                if (currentPlayer.role === 'apostolo') {
+                    const helpText = document.createElement('p');
+                    helpText.className = 'text-yellow-300 text-sm mb-3 text-center';
+                    helpText.textContent = 'Selecione exatamente 2 pessoas';
+                    targetSelection.appendChild(helpText);
+                }
+                
+                players.filter(p => p.is_alive && p.id !== currentPlayer.id).forEach(player => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition-colors';
+                    btn.textContent = player.name;
+                    btn.onclick = () => selectNightTarget(player.id, currentPlayer.role === 'apostolo', currentPlayer.id);
+                    targetSelection.appendChild(btn);
+                });
+            } else {
+                targetSelection.classList.add('hidden');
+                noAction.classList.remove('hidden');
+            }
+        }
+
+        let selectedNightTarget = null;
+        let selectedNightTargets = [];
+
+        function selectNightTarget(targetId, selectTwo = false, playerId = null) {
+            const confirmBtn = document.getElementById('confirm-night-action-btn');
+            
+            if (selectTwo) {
+                const index = selectedNightTargets.indexOf(targetId);
+                if (index > -1) {
+                    selectedNightTargets.splice(index, 1);
+                    event.target.classList.remove('bg-indigo-600');
+                    event.target.classList.add('bg-gray-700');
+                } else {
+                    if (selectedNightTargets.length < 2) {
+                        selectedNightTargets.push(targetId);
+                        event.target.classList.remove('bg-gray-700');
+                        event.target.classList.add('bg-indigo-600');
+                    }
+                }
+                
+                if (selectedNightTargets.length === 2) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    confirmBtn.disabled = true;
+                    confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                selectedNightTarget = targetId;
+                
+                const buttons = document.querySelectorAll('#night-target-selection button');
+                buttons.forEach(btn => {
+                    if (btn.textContent !== 'Selecione exatamente 2 pessoas') {
+                        btn.classList.remove('bg-indigo-600');
+                        btn.classList.add('bg-gray-700');
+                    }
+                });
+                
+                event.target.classList.remove('bg-gray-700');
+                event.target.classList.add('bg-indigo-600');
+                
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function confirmNightAction() {
+            const alivePlayers = players.filter(p => p.is_alive);
+            const currentPlayer = alivePlayers[currentNightPlayerIndex];
+            const confirmBtn = document.getElementById('confirm-night-action-btn');
+            const targetSelection = document.getElementById('night-target-selection');
+            
+            if (ROLES[currentPlayer.role].nightAction) {
+                if (currentPlayer.role === 'apostolo') {
+                    if (selectedNightTargets.length === 2) {
+                        if (!nightActions[currentPlayer.role]) {
+                            nightActions[currentPlayer.role] = [];
+                        }
+                        nightActions[currentPlayer.role].push({
+                            player: currentPlayer.id,
+                            targets: [...selectedNightTargets]
+                        });
+                        
+                        const target1 = players.find(p => p.id === selectedNightTargets[0]);
+                        const target2 = players.find(p => p.id === selectedNightTargets[1]);
+                        const sameTeam = target1.team === target2.team;
+                        
+                        targetSelection.classList.add('hidden');
+                        confirmBtn.classList.add('hidden');
+                        
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'mt-4 p-4 bg-purple-900 border-2 border-purple-500 rounded-lg';
+                        resultDiv.innerHTML = `
+                            <p class="text-purple-200 text-center font-semibold mb-2">🔍 Resultado da Investigação:</p>
+                            <p class="text-white text-center text-lg">
+                                ${target1.name} e ${target2.name} são da ${sameTeam ? '<strong class="text-green-300">MESMA EQUIPE</strong>' : '<strong class="text-red-300">EQUIPES DIFERENTES</strong>'}
+                            </p>
+                            <p class="text-purple-300 text-center text-sm mt-2">Memorize esta informação!</p>
+                        `;
+                        document.getElementById('night-action-section').appendChild(resultDiv);
+                        
+                        const endTurnBtn = document.createElement('button');
+                        endTurnBtn.className = 'w-full mt-4 py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg';
+                        endTurnBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                        endTurnBtn.textContent = '✓ Encerrar Minha Vez';
+                        endTurnBtn.onclick = () => {
+                            selectedNightTarget = null;
+                            selectedNightTargets = [];
+                            currentNightPlayerIndex++;
+                            processNightTurn();
+                        };
+                        document.getElementById('night-action-section').appendChild(endTurnBtn);
+                        return;
+                    }
+                } else if (currentPlayer.role === 'profeta') {
+                    if (selectedNightTarget) {
+                        if (!nightActions[currentPlayer.role]) {
+                            nightActions[currentPlayer.role] = [];
+                        }
+                        nightActions[currentPlayer.role].push({
+                            player: currentPlayer.id,
+                            target: selectedNightTarget
+                        });
+                        
+                        const target = players.find(p => p.id === selectedNightTarget);
+                        const targetRole = ROLES[target.role];
+                        
+                        targetSelection.classList.add('hidden');
+                        confirmBtn.classList.add('hidden');
+                        
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'mt-4 p-4 bg-purple-900 border-2 border-purple-500 rounded-lg';
+                        resultDiv.innerHTML = `
+                            <p class="text-purple-200 text-center font-semibold mb-2">🔮 Visão Profética:</p>
+                            <p class="text-white text-center text-lg">
+                                ${target.name} é: <strong class="text-yellow-300">${targetRole.emoji} ${targetRole.name}</strong>
+                            </p>
+                            <p class="text-purple-300 text-center text-sm mt-2">Memorize esta informação!</p>
+                        `;
+                        document.getElementById('night-action-section').appendChild(resultDiv);
+                        
+                        const endTurnBtn = document.createElement('button');
+                        endTurnBtn.className = 'w-full mt-4 py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg';
+                        endTurnBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                        endTurnBtn.textContent = '✓ Encerrar Minha Vez';
+                        endTurnBtn.onclick = () => {
+                            selectedNightTarget = null;
+                            selectedNightTargets = [];
+                            currentNightPlayerIndex++;
+                            processNightTurn();
+                        };
+                        document.getElementById('night-action-section').appendChild(endTurnBtn);
+                        return;
+                    }
+                } else if (currentPlayer.role === 'evangelista') {
+                    if (selectedNightTarget) {
+                        if (!nightActions[currentPlayer.role]) {
+                            nightActions[currentPlayer.role] = [];
+                        }
+                        nightActions[currentPlayer.role].push({
+                            player: currentPlayer.id,
+                            target: selectedNightTarget
+                        });
+                        
+                        if (!evangelistPrayers[currentPlayer.id]) {
+                            evangelistPrayers[currentPlayer.id] = {};
+                        }
+                        if (!evangelistPrayers[currentPlayer.id][selectedNightTarget]) {
+                            evangelistPrayers[currentPlayer.id][selectedNightTarget] = 0;
+                        }
+                        evangelistPrayers[currentPlayer.id][selectedNightTarget]++;
+                        
+                        const target = players.find(p => p.id === selectedNightTarget);
+                        const prayerCount = evangelistPrayers[currentPlayer.id][selectedNightTarget];
+                        
+                        targetSelection.classList.add('hidden');
+                        confirmBtn.classList.add('hidden');
+                        
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'mt-4 p-4 bg-purple-900 border-2 border-purple-500 rounded-lg';
+                        resultDiv.innerHTML = `
+                            <p class="text-purple-200 text-center font-semibold mb-2">🙏 Oração Realizada:</p>
+                            <p class="text-white text-center text-lg">
+                                Você orou por <strong class="text-yellow-300">${target.name}</strong>
+                            </p>
+                            <p class="text-purple-300 text-center text-sm mt-2">
+                                Total de orações: ${prayerCount}/2
+                            </p>
+                            ${prayerCount === 2 ? '<p class="text-green-300 text-center text-sm mt-1">✨ Se for um Soldado, será convertido no amanhecer!</p>' : ''}
+                        `;
+                        document.getElementById('night-action-section').appendChild(resultDiv);
+                        
+                        const endTurnBtn = document.createElement('button');
+                        endTurnBtn.className = 'w-full mt-4 py-3 px-6 rounded-lg font-semibold text-white transition-all shadow-lg';
+                        endTurnBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                        endTurnBtn.textContent = '✓ Encerrar Minha Vez';
+                        endTurnBtn.onclick = () => {
+                            selectedNightTarget = null;
+                            selectedNightTargets = [];
+                            currentNightPlayerIndex++;
+                            processNightTurn();
+                        };
+                        document.getElementById('night-action-section').appendChild(endTurnBtn);
+                        return;
+                    }
+                } else if (selectedNightTarget) {
+                    if (!nightActions[currentPlayer.role]) {
+                        nightActions[currentPlayer.role] = [];
+                    }
+                    nightActions[currentPlayer.role].push(selectedNightTarget);
+                }
+            }
+            
+            selectedNightTarget = null;
+            selectedNightTargets = [];
+            currentNightPlayerIndex++;
+            processNightTurn();
+        }
+
+        function resolveNight() {
+            const protectedPlayers = nightActions.curandeiro || [];
+            const werewolfTargets = nightActions.lobisomem || [];
+            const evangelistActions = nightActions.evangelista || [];
+            
+            let conversions = [];
+            evangelistActions.forEach(action => {
+                const targetId = action.target;
+                const evangelistId = action.player;
+                
+                if (evangelistPrayers[evangelistId] && evangelistPrayers[evangelistId][targetId] >= 2) {
+                    const target = players.find(p => p.id === targetId);
+                    if (target && target.is_alive && target.role === 'lobisomem') {
+                        target.role = 'aldeao';
+                        target.team = 'aldeao';
+                        conversions.push(target.name);
+                    }
+                }
+            });
+            
+            let werewolfTarget = null;
+            if (werewolfTargets.length > 0) {
+                const voteCounts = {};
+                werewolfTargets.forEach(target => {
+                    voteCounts[target] = (voteCounts[target] || 0) + 1;
+                });
+                werewolfTarget = Object.keys(voteCounts).reduce((a, b) => 
+                    voteCounts[a] > voteCounts[b] ? a : b
+                );
+            }
+            
+            const protectedPlayer = protectedPlayers[0];
+            
+            let victim = null;
+            
+            if (werewolfTarget && werewolfTarget !== protectedPlayer) {
+                victim = players.find(p => p.id === werewolfTarget);
+                if (victim) {
+                    victim.is_alive = false;
+                }
+            }
+            
+            startDayPhase(victim, conversions);
+        }
+
+        function startDayPhase(victim, conversions = []) {
+            dayVotes = {};
+            showScreen('day-screen');
+            
+            document.getElementById('day-number').textContent = dayNumber;
+            
+            const victimAnnouncement = document.getElementById('victim-announcement');
+            if (victim) {
+                victimAnnouncement.classList.remove('hidden');
+                victimAnnouncement.classList.remove('bg-green-50', 'border-green-300');
+                victimAnnouncement.classList.add('bg-red-50', 'border-red-300');
+                victimAnnouncement.querySelector('p').className = 'text-red-800 font-semibold text-center';
+                victimAnnouncement.querySelector('p').textContent = `💀 ${victim.name} foi eliminado durante a noite!`;
+            } else {
+                victimAnnouncement.classList.remove('hidden');
+                victimAnnouncement.classList.remove('bg-red-50', 'border-red-300');
+                victimAnnouncement.classList.add('bg-green-50', 'border-green-300');
+                victimAnnouncement.querySelector('p').className = 'text-green-800 font-semibold text-center';
+                victimAnnouncement.querySelector('p').textContent = '✨ Ninguém morreu esta noite! O Pastor protegeu alguém.';
+            }
+            
+            const conversionAnnouncement = document.getElementById('conversion-announcement');
+            if (conversions.length > 0) {
+                conversionAnnouncement.classList.remove('hidden');
+                conversionAnnouncement.querySelector('p').textContent = `🙏 Um milagre aconteceu! Alguém foi convertido pela fé do Evangelista!`;
+            } else {
+                conversionAnnouncement.classList.add('hidden');
+            }
+            
+            updateGameUI();
+            createVoteButtons();
+            
+            if (checkVictory()) {
+                return;
+            }
+        }
+
+        function createVoteButtons() {
+            hasVoted = new Set();
+            currentVotePlayerIndex = 0;
+            currentVoterSelectedTarget = null;
+            
+            document.getElementById('vote-turn-section').classList.remove('hidden');
+            document.getElementById('vote-complete-section').classList.add('hidden');
+            document.getElementById('vote-result').classList.add('hidden');
+            document.getElementById('next-phase-btn').classList.add('hidden');
+            
+            processVoteTurn();
+        }
+
+        function processVoteTurn() {
+            const alivePlayers = players.filter(p => p.is_alive);
+            
+            if (currentVotePlayerIndex >= alivePlayers.length) {
+                document.getElementById('vote-turn-section').classList.add('hidden');
+                document.getElementById('vote-complete-section').classList.remove('hidden');
+                return;
+            }
+            
+            const currentPlayer = alivePlayers[currentVotePlayerIndex];
+            document.getElementById('current-vote-player').textContent = currentPlayer.name;
+            
+            document.getElementById('vote-reveal-section').classList.remove('hidden');
+            document.getElementById('vote-action-section').classList.add('hidden');
+            currentVoterSelectedTarget = null;
+        }
+
+        function revealVoteOptions() {
+            const alivePlayers = players.filter(p => p.is_alive);
+            const currentPlayer = alivePlayers[currentVotePlayerIndex];
+            
+            document.getElementById('vote-reveal-section').classList.add('hidden');
+            document.getElementById('vote-action-section').classList.remove('hidden');
+            
+            const voteButtons = document.getElementById('vote-buttons');
+            voteButtons.innerHTML = '';
+            
+            const confirmBtn = document.getElementById('confirm-vote-btn');
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            alivePlayers.forEach(player => {
+                const btn = document.createElement('button');
+                btn.className = 'px-4 py-3 bg-red-100 hover:bg-red-200 rounded-lg text-left transition-colors font-semibold';
+                btn.textContent = player.name;
+                btn.onclick = () => selectVoteTarget(player.id);
+                voteButtons.appendChild(btn);
+            });
+        }
+
+        function selectVoteTarget(targetId) {
+            currentVoterSelectedTarget = targetId;
+            
+            const buttons = document.querySelectorAll('#vote-buttons button');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-red-600', 'text-white');
+                btn.classList.add('bg-red-100');
+            });
+            
+            event.target.classList.remove('bg-red-100');
+            event.target.classList.add('bg-red-600', 'text-white');
+            
+            const confirmBtn = document.getElementById('confirm-vote-btn');
+            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function confirmVote() {
+            if (!currentVoterSelectedTarget) {
+                return;
+            }
+            
+            const alivePlayers = players.filter(p => p.is_alive);
+            const voter = alivePlayers[currentVotePlayerIndex];
+            
+            if (!dayVotes[currentVoterSelectedTarget]) {
+                dayVotes[currentVoterSelectedTarget] = 0;
+            }
+            
+            const voteValue = (voter && voter.role === 'mestre') ? 2 : 1;
+            dayVotes[currentVoterSelectedTarget] += voteValue;
+            hasVoted.add(voter.id);
+            
+            if (voteValue === 2) {
+                const feedback = document.createElement('div');
+                feedback.className = 'mt-2 p-2 bg-yellow-100 border border-yellow-400 rounded text-center text-sm text-yellow-800';
+                feedback.textContent = '👑 Voto do Mestre conta DUPLO!';
+                document.getElementById('vote-action-section').appendChild(feedback);
+                setTimeout(() => {
+                    feedback.remove();
+                    currentVoterSelectedTarget = null;
+                    currentVotePlayerIndex++;
+                    processVoteTurn();
+                }, 2000);
+            } else {
+                currentVoterSelectedTarget = null;
+                currentVotePlayerIndex++;
+                processVoteTurn();
+            }
+        }
+
+        function revealVoteResult() {
+            const voteResult = document.getElementById('vote-result');
+            voteResult.classList.remove('hidden');
+            
+            let resultHTML = '<div class="space-y-2">';
+            Object.keys(dayVotes).forEach(id => {
+                const player = players.find(p => p.id === id);
+                resultHTML += `<p><strong>${player.name}:</strong> ${dayVotes[id]} voto(s)</p>`;
+            });
+            resultHTML += '</div>';
+            
+            voteResult.querySelector('p').innerHTML = resultHTML;
+            
+            document.getElementById('next-phase-btn').classList.remove('hidden');
+        }
+
+        function resolveVoting() {
+            const alivePlayers = players.filter(p => p.is_alive);
+            const totalVotes = alivePlayers.length;
+            const majorityNeeded = Math.floor(totalVotes / 2) + 1;
+            
+            let maxVotes = 0;
+            let eliminatedId = null;
+            let candidatesWithMaxVotes = [];
+            
+            Object.keys(dayVotes).forEach(id => {
+                if (dayVotes[id] > maxVotes) {
+                    maxVotes = dayVotes[id];
+                }
+            });
+            
+            if (maxVotes >= majorityNeeded) {
+                Object.keys(dayVotes).forEach(id => {
+                    if (dayVotes[id] === maxVotes) {
+                        candidatesWithMaxVotes.push(id);
+                    }
+                });
+                
+                if (candidatesWithMaxVotes.length === 1) {
+                    eliminatedId = candidatesWithMaxVotes[0];
+                }
+            }
+            
+            if (eliminatedId) {
+                const eliminated = players.find(p => p.id === eliminatedId);
+                eliminated.is_alive = false;
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center';
+                modal.style.zIndex = '9999';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+                        <h3 class="text-2xl font-bold text-center mb-4">⚖️ Resultado da Votação</h3>
+                        <p class="text-center text-lg mb-4">${eliminated.name} foi eliminado com ${maxVotes} votos!</p>
+                        <p class="text-center text-sm text-gray-500 mb-2">(Maioria necessária: ${majorityNeeded} de ${totalVotes} votos)</p>
+                        <p class="text-center text-gray-600 mb-4">Era: ${ROLES[eliminated.role].emoji} ${ROLES[eliminated.role].name}</p>
+                        <button onclick="this.parentElement.parentElement.remove(); continueGame();" class="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg">Continuar</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } else {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center';
+                modal.style.zIndex = '9999';
+                
+                let reason = '';
+                if (maxVotes < majorityNeeded) {
+                    reason = `Nenhum jogador atingiu a maioria necessária (${majorityNeeded} votos)`;
+                } else if (candidatesWithMaxVotes.length > 1) {
+                    reason = 'Houve um empate na votação';
+                }
+                
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+                        <h3 class="text-2xl font-bold text-center mb-4">⚖️ Resultado da Votação</h3>
+                        <p class="text-center text-lg mb-4">Ninguém foi eliminado!</p>
+                        <p class="text-center text-sm text-gray-600 mb-4">${reason}</p>
+                        <button onclick="this.parentElement.parentElement.remove(); continueGame();" class="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg">Continuar</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        function continueGame() {
+            if (checkVictory()) {
+                return;
+            }
+            
+            dayNumber++;
+            startNightPhase();
+        }
+
+        function checkVictory() {
+            const alive = players.filter(p => p.is_alive);
+            const aliveWerewolves = alive.filter(p => p.role === 'lobisomem').length;
+            const aliveVillagers = alive.filter(p => p.team === 'aldeao').length;
+            
+            if (aliveWerewolves === 0) {
+                endGame('aldeao', 'As Ovelhas venceram! Todos os Soldados foram eliminados! 🎉');
+                return true;
+            }
+            
+            if (aliveWerewolves >= aliveVillagers) {
+                endGame('lobisomem', 'Os Soldados venceram! Eles são maioria agora! 🪖');
+                return true;
+            }
+            
+            return false;
+        }
+
+        function endGame(winner, message) {
+            showScreen('end-screen');
+            
+            document.getElementById('winner-message').textContent = message;
+            
+            const revealedRoles = document.getElementById('revealed-roles');
+            revealedRoles.innerHTML = '';
+            
+            players.forEach(player => {
+                const role = ROLES[player.role];
+                const originalRole = ROLES[player.originalRole];
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-lg ${player.is_alive ? 'bg-green-50 border-2 border-green-300' : 'bg-gray-50 border-2 border-gray-300'}`;
+                
+                let roleText = `${role.emoji} ${role.name}`;
+                if (player.role !== player.originalRole) {
+                    roleText += ` <span class="text-xs text-purple-600">(era ${originalRole.emoji} ${originalRole.name})</span>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold">${player.name}</span>
+                        <span>${roleText}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">${player.is_alive ? '✅ Sobreviveu' : '💀 Eliminado'}</p>
+                `;
+                revealedRoles.appendChild(card);
+            });
+        }
+
+        function updateGameUI() {
+            const playersList = document.getElementById('game-players-list');
+            playersList.innerHTML = '';
+            
+            players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = `player-card p-3 rounded-lg border-2 ${player.is_alive ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-300 dead-player'}`;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold ${player.is_alive ? 'text-gray-800' : 'text-gray-500'}">${player.name}</span>
+                        <span class="text-sm">${player.is_alive ? '🟢' : '💀'}</span>
+                    </div>
+                `;
+                playersList.appendChild(card);
+            });
+            
+            const aliveCount = players.filter(p => p.is_alive).length;
+            const deadCount = players.filter(p => !p.is_alive).length;
+            
+            document.getElementById('alive-count').textContent = aliveCount;
+            document.getElementById('dead-count').textContent = deadCount;
+            document.getElementById('phase-info').textContent = `Dia ${dayNumber}`;
+        }
+
+        document.getElementById('add-user-btn').addEventListener('click', addUser);
+        document.getElementById('new-user-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addUser();
+            }
+        });
+        document.getElementById('next-to-selection-btn').addEventListener('click', showPlayerSelection);
+        document.getElementById('next-to-roles-btn').addEventListener('click', showRoleSelection);
+        document.getElementById('start-game-with-roles-btn').addEventListener('click', startGameWithSelectedRoles);
+        document.getElementById('reveal-role-btn').addEventListener('click', revealRole);
+        document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
+        document.getElementById('start-game-btn').addEventListener('click', () => {
+            dayNumber = 1;
+            startNightPhase();
+        });
+        document.getElementById('reveal-night-action-btn').addEventListener('click', revealNightAction);
+        document.getElementById('confirm-night-action-btn').addEventListener('click', confirmNightAction);
+        document.getElementById('reveal-vote-btn').addEventListener('click', revealVoteOptions);
+        document.getElementById('confirm-vote-btn').addEventListener('click', confirmVote);
+        document.getElementById('reveal-result-btn').addEventListener('click', revealVoteResult);
+        document.getElementById('next-phase-btn').addEventListener('click', resolveVoting);
+        document.getElementById('new-game-btn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        async function init() {
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange,
+                    mapToCapabilities,
+                    mapToEditPanelValues
+                });
+                
+                await onConfigChange(window.elementSdk.config);
+            }
+        }
+
+        init();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a9f0989740c8aef',t:'MTc2NTA1ODIyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
